@@ -7,19 +7,22 @@ import numpy as np
 def to_int(x):
     return sum([2**i for i, b in enumerate(reversed(x)) if b])
 
-def part2(data, which):
-    data2 = np.copy(data)
-    for column in range(data2.shape[1]):
-        most_common = 1 if sum(data2[:,column]) >= (data2.shape[0] / 2) else 0
-        if which:
-            most_common = 1 - most_common
-        data2 = data2[data2[:,column] == most_common, :]
-        if data2.shape[0] == 1:
+def part2(data, find_least):
+    active = np.full(data.shape[0], True)
+    still_active = data.shape[0]
+    for column in range(data.shape[1]):
+        most_common = sum(data[active,column]) >= (still_active / 2)
+        if find_least:
+            most_common = ~most_common
+        filtered = data[:,column] == most_common
+        active = active & filtered
+        still_active = sum(active)
+        if still_active == 1:
             break
-    return to_int(data2[0,:])
+    return to_int(data[active,:][0])
 
 with open(sys.argv[1]) as f:
-    data = np.array([[int(x) for x in l.strip()] for l in f.readlines()])
+    data = np.array([[x == '1' for x in l.strip()] for l in f.readlines()])
 
 gamma = np.sum(data, 0) > (data.shape[0] / 2)
 epsilon = ~gamma
