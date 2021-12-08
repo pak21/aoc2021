@@ -3,8 +3,6 @@
 import collections
 import sys
 
-import numpy as np
-
 OUTPUTS = {
     'abcefg': '0',
     'cf': '1',
@@ -19,7 +17,7 @@ OUTPUTS = {
 }
 
 def invert(x):
-    return set(['a', 'b', 'c', 'd', 'e', 'f', 'g']) - set([y for y in x])
+    return {'a', 'b', 'c', 'd', 'e', 'f', 'g'} - set(x)
 
 with open(sys.argv[1]) as f:
     notes = [[part.split(' ') for part in line.strip().split(' | ')] for line in f.readlines()]
@@ -30,43 +28,62 @@ print(segment_counts[2] + segment_counts[3] + segment_counts[4] + segment_counts
 
 answer = 0
 
+# Each segment count gives us a set of constraints from both the set segments and unset
+# segments
+#
+# For example, if the segment count is 2 we know that:
+# 1) the two segments must correspond to segments 'c' and 'f'
+# 2) the five unset segments must correspond to segments 'a', 'b', 'd', 'e' and 'g'
+#
+# For the segment counts with multiple digits, the constraints are slightly less obvious
+# but are effectively the union of all the digits with that segment count. For example,
+# for a segment ocunt of 5:
+# 1) we know nothing from the set segments, because all 7 segments are set in one of
+#    {2, 3, 5}
+# 2) the unset segments must be one of 'b', 'c', 'e' or 'f' because they are the only
+#    segments which are unset in any of the digits {2, 3, 5}.
+CONSTRAINTS = {
+    2: [
+        {'c', 'f'},
+        {'a', 'b', 'd', 'e', 'g'}
+    ],
+    3: [
+        {'a', 'c', 'f'},
+        {'b', 'd', 'e', 'g'}
+    ],
+    4: [
+        {'b', 'c', 'd', 'f'},
+        {'a', 'e', 'g'}
+    ],
+    5: [
+        {'a', 'b', 'c', 'd', 'e', 'f', 'g'},
+        {'b', 'c', 'e', 'f'}
+    ],
+    6: [
+        {'a', 'b', 'c', 'd', 'e', 'f', 'g'},
+        {'d', 'c', 'e'}
+    ],
+    7: [
+        {'a', 'b', 'c', 'd', 'e', 'f', 'g'},
+        {}
+    ],
+}
+
 for note in notes:
-    possible = {
-        'a': set(['a', 'b', 'c', 'd', 'e', 'f', 'g']),
-        'b': set(['a', 'b', 'c', 'd', 'e', 'f', 'g']),
-        'c': set(['a', 'b', 'c', 'd', 'e', 'f', 'g']),
-        'd': set(['a', 'b', 'c', 'd', 'e', 'f', 'g']),
-        'e': set(['a', 'b', 'c', 'd', 'e', 'f', 'g']),
-        'f': set(['a', 'b', 'c', 'd', 'e', 'f', 'g']),
-        'g': set(['a', 'b', 'c', 'd', 'e', 'f', 'g'])
-    }
+    possible = {chr(97 + i): {'a', 'b', 'c', 'd', 'e', 'f', 'g'} for i in range(7)}
 
     for digit in note[0]:
-        if len(digit) == 2:
-            for segment in digit:
-                possible[segment] = possible[segment].intersection(['c', 'f'])
-            for segment in invert(digit):
-                possible[segment] = possible[segment].intersection(['a', 'b', 'd', 'e', 'g'])
-        elif len(digit) == 3:
-            for segment in digit:
-                possible[segment] = possible[segment].intersection(['a', 'c', 'f'])
-            for segment in invert(digit):
-                possible[segment] = possible[segment].intersection(['b', 'd', 'e', 'g'])
-        elif len(digit) == 4:
-            for segment in digit:
-                possible[segment] = possible[segment].intersection(['b', 'c', 'd', 'f'])
-            for segment in invert(digit):
-                possible[segment] = possible[segment].intersection(['a', 'e', 'g'])
-        elif len(digit) == 5:
-            for segment in invert(digit):
-                possible[segment] = possible[segment].intersection(['b', 'c', 'e', 'f'])
-        elif len(digit) == 6:
-            for segment in invert(digit):
-                possible[segment] = possible[segment].intersection(['d', 'c', 'e'])
+        positive_constraint, negative_constraint = CONSTRAINTS[len(digit)]
+        for segment in digit:
+            possible[segment] = possible[segment].intersection(positive_constraint)
+        for segment in invert(digit):
+            possible[segment] = possible[segment].intersection(negative_constraint)
 
     definite = {}
 
-    while True:
+    # We've now have a (relatively) small set of possible mappings for each wire; use
+    # a greedy algorithm to get the individual mappings
+    while possible:
         can_process = [x for x in possible.items() if len(x[1]) == 1]
         if not can_process:
             raise Exception('No unique mapping found')
@@ -76,9 +93,6 @@ for note in notes:
         del possible[input_segment]
         for key in possible:
             possible[key] -= output_segments
-
-        if len(definite) == 7:
-            break
 
     displayed = int(''.join([OUTPUTS[''.join(sorted([definite[key] for key in digit]))] for digit in note[1]]))
     answer += displayed
