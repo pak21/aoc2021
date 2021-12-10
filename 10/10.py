@@ -2,6 +2,14 @@
 
 import sys
 
+OPENS = {'(': 1, '[': 2, '{': 3, '<': 4}
+CLOSES = {
+    ')': ('(', 3),
+    ']': ('[', 57),
+    '}': ('{', 1197),
+    '>': ('<', 25137)
+}
+
 with open(sys.argv[1]) as f:
     chunks = f.readlines()
 
@@ -12,55 +20,17 @@ for chunk in chunks:
     state = []
     corrupt = False
     for c in chunk.strip():
-        if c == '(' or c == '[' or c == '{' or c == '<':
+        if c in OPENS:
             state.append(c)
-        elif c == ')':
-            if state[-1] == '(':
-                state.pop()
-            else:
-                score += 3
-                corrupt = True
-                break
-        elif c == ']':
-            if state[-1] == '[':
-                state.pop()
-            else:
-                score += 57
-                corrupt = True
-                break
-        elif c == '}':
-            if state[-1] == '{':
-                state.pop()
-            else:
-                score += 1197
-                corrupt = True
-                break
-        elif c == '>':
-            if state[-1] == '<':
-                state.pop()
-            else:
-                score += 25137
-                corrupt = True
-                break
+        elif state[-1] == CLOSES[c][0]:
+            state.pop()
         else:
-            print('***', c, '***')
-            raise Exception(chunk)
+            score += CLOSES[c][1]
+            corrupt = True
+            break
 
     if not corrupt:
-        a = 0
-        for c in state[::-1]:
-            a *= 5
-            if c == '(':
-                a += 1
-            elif c == '[':
-                a += 2
-            elif c == '{':
-                a += 3
-            elif c == '<':
-                a += 4
-            else:
-                raise Exception('boom')
-        incompletes.append(a)
+        incompletes.append(sum([5**i * OPENS[c] for i, c in enumerate(state)]))
 
 print(score)
 print(sorted(incompletes)[len(incompletes)//2])
