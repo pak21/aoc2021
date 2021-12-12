@@ -12,16 +12,13 @@ class State:
         self.double_visit = double_visit
 
 def can_visit(state, next_cave):
-    return \
-        next_cave.isupper() or \
-        next_cave not in state.visited or \
-        (PART2 and not state.double_visit)
+    return next_cave not in state.visited or (PART2 and not state.double_visit)
 
 def visit(state, next_cave):
     return State(
         [next_cave] + state.path,
-        state.visited | set([next_cave]),
-        state.double_visit or (False if next_cave.isupper() else (next_cave in state.visited))
+        state.visited if next_cave.isupper() else state.visited | set([next_cave]),
+        state.double_visit or next_cave in state.visited
     )
 
 conns = collections.defaultdict(list)
