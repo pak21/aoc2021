@@ -5,11 +5,7 @@ import sys
 
 PART2 = True
 
-class State:
-    def __init__(self, path, visited, double_visit):
-        self.path = path
-        self.visited = visited
-        self.double_visit = double_visit
+State = collections.namedtuple('State', ['path', 'visited', 'double_visit'])
 
 def can_visit(state, next_cave):
     return next_cave not in state.visited or (PART2 and not state.double_visit)
@@ -29,20 +25,17 @@ with open(sys.argv[1]) as f:
         if b != 'end' and a != 'start':
             conns[b].append(a)
 
-seen = set()
 todo = [State(['start'], set(), False)]
 paths = 0
 
 while todo:
     old_state = todo.pop()
-    seen.add(old_state)
 
     for next_cave in conns[old_state.path[0]]:
         if next_cave == 'end':
             paths += 1
         elif can_visit(old_state, next_cave):
             new_state = visit(old_state, next_cave)
-            if new_state not in seen:
-                todo.append(new_state)
+            todo.append(new_state)
 
 print(paths)
