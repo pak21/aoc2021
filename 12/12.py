@@ -11,9 +11,6 @@ class State:
         self.visited = visited
         self.double_visit = double_visit
 
-def zero():
-    return State([], set(), False)
-
 def can_visit(state, next_cave):
     return \
         next_cave.isupper() or \
@@ -24,7 +21,7 @@ def visit(state, next_cave):
     return State(
         [next_cave] + state.path,
         state.visited | set([next_cave]),
-        state.double_visit or (state.double_visit if next_cave.isupper() else (next_cave in state.visited))
+        state.double_visit or (False if next_cave.isupper() else (next_cave in state.visited))
     )
 
 conns = collections.defaultdict(list)
@@ -36,7 +33,7 @@ with open(sys.argv[1]) as f:
             conns[b].append(a)
 
 seen = set()
-todo = [visit(zero(), 'start')]
+todo = [State(['start'], set(), False)]
 paths = 0
 
 while todo:
