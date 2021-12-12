@@ -43,9 +43,7 @@ while todo:
     for next_cave in conns[old_state.path[0]]:
         if next_cave == 'end':
             paths += 1
-            continue
-
-        if can_visit(old_state, next_cave):
+        elif can_visit(old_state, next_cave):
             new_state = visit(old_state, next_cave)
             if new_state not in seen:
                 todo.append(new_state)
