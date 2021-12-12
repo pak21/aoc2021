@@ -27,9 +27,9 @@ def visit(state, next_cave):
 conns = collections.defaultdict(list)
 with open(sys.argv[1]) as f:
     for a, b in [l.strip().split('-') for l in f.readlines()]:
-        if b != 'start':
+        if a != 'end' and b != 'start':
             conns[a].append(b)
-        if a != 'start':
+        if b != 'end' and a != 'start':
             conns[b].append(a)
 
 seen = set()
