@@ -8,7 +8,7 @@ PART2 = True
 State = collections.namedtuple('State', ['path', 'visited', 'double_visit'])
 
 def can_visit(state, next_cave):
-    return next_cave not in state.visited or (PART2 and not state.double_visit)
+    return not (next_cave in state.visited and state.double_visit)
 
 def visit(state, next_cave):
     return State(
@@ -25,7 +25,7 @@ with open(sys.argv[1]) as f:
         if b != 'end' and a != 'start':
             conns[b].append(a)
 
-todo = [State(['start'], set(), False)]
+todo = [State(['start'], set(), not PART2)]
 paths = 0
 
 while todo:
