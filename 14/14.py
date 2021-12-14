@@ -6,22 +6,30 @@ import sys
 with open(sys.argv[1]) as f:
     template, rules_s = f.read().split('\n\n')
 
-rules = {tuple(a): b for a, b in [x.split(' -> ') for x in rules_s.strip().split('\n')]}
+rules = {
+    tuple(pair): [(pair[0], to_add), (to_add, pair[1])]
+    for pair, to_add
+    in [
+        line.split(' -> ')
+        for line
+        in rules_s.strip().split('\n')
+    ]
+}
 
 pairs = collections.Counter(zip(template[:-1], template[1:]))
 
 for i in range(int(sys.argv[2])):
     new_pairs = collections.defaultdict(int)
-    for p, v in pairs.items():
-        new_pairs[(p[0], rules[p])] += v
-        new_pairs[(rules[p], p[1])] += v
+    for pair, count in pairs.items():
+        for new_pair in rules[pair]:
+            new_pairs[new_pair] += count
 
     pairs = new_pairs
 
 counts = collections.defaultdict(int)
-for p, v in pairs.items():
-    counts[p[0]] += v
-    counts[p[1]] += v
+for pair, count in pairs.items():
+    counts[pair[0]] += count
+    counts[pair[1]] += count
 
 # Note for future Phil: every character _except_ the first and last is a part of
 # two pairs, so the above double counts everything except the first and last
