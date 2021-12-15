@@ -18,7 +18,7 @@ for dx in range(size_multiplier):
     for dy in range(size_multiplier):
         small_cavern_copy = (small_cavern - 1 + dx + dy) % 9 + 1
         cavern[
-            dy * small_cavern.shape[0] : (dy+1) * small_cavern.shape[1],
+            dy * small_cavern.shape[0] : (dy+1) * small_cavern.shape[0],
             dx * small_cavern.shape[1] : (dx+1) * small_cavern.shape[1]
         ] = small_cavern_copy
 
