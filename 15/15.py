@@ -23,7 +23,8 @@ for dx in range(size_multiplier):
         ] = small_cavern_copy
 
 todo = [(0, 0, 0)]
-best = {(0, 0): 0}
+best = np.full(cavern.shape, 10 * cavern.size) # Guaranteed to be larger than any path
+best[0, 0] = 0
 
 while todo:
     risk, x, y = heapq.heappop(todo)
@@ -36,8 +37,8 @@ while todo:
 
         new_risk = risk + cavern[newy, newx]
 
-        if (newx, newy) not in best or new_risk < best[(newx, newy)]:
-            best[(newx, newy)] = new_risk
+        if new_risk < best[newy, newx]:
+            best[newy, newx] = new_risk
             heapq.heappush(todo, (new_risk, newx, newy))
 
-print(best[(cavern.shape[1]-1, cavern.shape[0]-1)])
+print(best[-1, -1])
