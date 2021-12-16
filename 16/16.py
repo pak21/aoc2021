@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
-import collections
+import functools
 import sys
-
-import numpy as np
 
 def get_bits(string, start, offset):
     first = start // 4
@@ -15,41 +13,34 @@ def get_bits(string, start, offset):
     to_shift = 4 * (last - first + 1) - end_bits
     mask = (1 << offset) - 1
 
-    chars = string[first:last+1]
-    value = (int(chars, 16) >> to_shift) & mask
-    return value
-
-def get_value(string, start, offset):
-    more = get_bits(string, start, 1)
-    v = get_bits(string, start + 1, offset - 1)
-    return (more == 1, v)
+    return (int(string[first:last+1], 16) >> to_shift) & mask
 
 def get_packet_value(string, start):
     version = get_bits(string, start, 3)
     typeid = get_bits(string, start + 3, 3)
+    start += 6
 
     if typeid == 4:
         more = True
-        start += 6
         value = 0
         while more:
-            more, v = get_value(packet, start, 5)
-            value = (value << 4) | v
+            more = get_bits(string, start, 1)
+            value = (value << 4) | get_bits(string, start + 1, 4)
             start += 5
     else:
-        subvalues = []#
-        length_typeid = get_bits(string, start + 6, 1)
+        subvalues = []
+        length_typeid = get_bits(string, start, 1)
         if length_typeid == 0:
-            bits_to_parse = get_bits(string, start + 7, 15)
-            start += 22
+            bits_to_parse = get_bits(string, start + 1, 15)
+            start += 16
             end_offset = start + bits_to_parse
             while start < end_offset:
                 start, ver, v = get_packet_value(string, start)
                 version += ver
                 subvalues.append(v)
         else:
-            packets_to_parse = get_bits(string, start + 7, 11)
-            start += 18
+            packets_to_parse = get_bits(string, start + 1, 11)
+            start += 12
             for i in range(packets_to_parse):
                 start, ver, v = get_packet_value(string, start)
                 version += ver
@@ -58,9 +49,7 @@ def get_packet_value(string, start):
         if typeid == 0:
             value = sum(subvalues)
         elif typeid == 1:
-            value = 1
-            for x in subvalues:
-                value *= x
+            value = functools.reduce(lambda a, b: a * b, subvalues, 1)
         elif typeid == 2:
             value = min(subvalues)
         elif typeid == 3:
@@ -71,8 +60,6 @@ def get_packet_value(string, start):
             value = 1 if subvalues[0] < subvalues[1] else 0
         elif typeid == 7:
             value = 1 if subvalues[0] == subvalues[1] else 0
-        else:
-            raise Exception(typeid)
 
     return start, version, value
 
