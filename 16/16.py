@@ -3,6 +3,16 @@
 import functools
 import sys
 
+OPERATORS = {
+    0: sum,
+    1: lambda vs: functools.reduce(lambda a, b: a * b, vs, 1),
+    2: min,
+    3: max,
+    5: lambda vs: 1 if vs[0] > vs[1] else 0,
+    6: lambda vs: 1 if vs[0] < vs[1] else 0,
+    7: lambda vs: 1 if vs[0] == vs[1] else 0,
+}
+
 def get_bits(string, start, offset):
     first = start // 4
     last = (start + offset - 1) // 4
@@ -46,20 +56,7 @@ def get_packet_value(string, start):
                 version += ver
                 subvalues.append(v)
 
-        if typeid == 0:
-            value = sum(subvalues)
-        elif typeid == 1:
-            value = functools.reduce(lambda a, b: a * b, subvalues, 1)
-        elif typeid == 2:
-            value = min(subvalues)
-        elif typeid == 3:
-            value = max(subvalues)
-        elif typeid == 5:
-            value = 1 if subvalues[0] > subvalues[1] else 0
-        elif typeid == 6:
-            value = 1 if subvalues[0] < subvalues[1] else 0
-        elif typeid == 7:
-            value = 1 if subvalues[0] == subvalues[1] else 0
+        value = OPERATORS[typeid](subvalues)
 
     return start, version, value
 
