@@ -28,7 +28,7 @@ def simulate(vx, vy, xmin, xmax, ymin, ymax):
 part1 = None
 part2 = 0
 for vx in range(0, xmax+1):
-    for vy in range(ymin, 100): # TODO: how to set the upper limit here?
+    for vy in range(ymin, -ymin+1):
         in_area, highest = simulate(vx, vy, xmin, xmax, ymin, ymax)
         if in_area:
             part2 += 1
