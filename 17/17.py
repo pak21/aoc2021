@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 
-import collections
 import re
 import sys
-
-import numpy as np
 
 with open(sys.argv[1]) as f:
     bounds = re.split('[^-0-9]+', f.readline().strip())
@@ -17,7 +14,7 @@ def simulate(vx, vy, xmin, xmax, ymin, ymax):
     while x < xmax and y > ymin:
         x += vx
         y += vy
-        vx = vx - np.sign(vx)
+        vx = vx - 1 if vx > 0 else 0
         vy -= 1
 
         if y > highest:
