@@ -11,11 +11,9 @@ def next_state(state, roll):
     new_score = state[1][state[2]] + new_pos
 
     if state[2] == 0:
-        new_state = ((new_pos, state[0][1]), (new_score, state[1][1]), 1)
+        return ((new_pos, state[0][1]), (new_score, state[1][1]), 1)
     else:
-        new_state = ((state[0][0], new_pos), (state[1][0], new_score), 0)
-
-    return new_state
+        return ((state[0][0], new_pos), (state[1][0], new_score), 0)
 
 with open(sys.argv[1]) as f:
     positions = tuple([int(l.strip().split()[4]) for l in f.readlines()])
