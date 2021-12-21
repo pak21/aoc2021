@@ -26,13 +26,12 @@ while states:
     for old_state, old_count in states.items():
         evolved_states = {next_state(old_state, roll): count for roll, count in MOVES.items()}
         for evolved_state, evolved_count in evolved_states.items():
-            new_states[evolved_state] += old_count * evolved_count
+            new_count = old_count * evolved_count
+            if evolved_state[1][1 - evolved_state[2]] >= 21:
+                win_counts[1 - evolved_state[2]] += new_count
+            else:
+                new_states[evolved_state] += new_count
 
     states = new_states
-
-    wins = [(state, count) for state, count in states.items() if state[1][1 - state[2]] >= 21]
-    for state, count in wins:
-        win_counts[1 - state[2]] += count
-        del states[state]
 
 print(max(win_counts))
