@@ -40,6 +40,12 @@ stars_df = stars_df.drop(to_drop, axis='columns')
 fig = plt.figure()
 ax = plt.subplot(111)
 
+# from https://mokole.com/palette.html
+colors = ['#2f4f4f', '#228b22', '#ff0000', '#ffd700', '#c71585',
+          '#0000cd', '#00ff00', '#00ffff', '#f4a460', '#1e90ff']
+ax.set_prop_cycle(color=colors * 3,
+                  linestyle=['solid', 'dashed', 'dotted'] * 10)
+
 for i in stars_df.index:
     if np.any(stars_df.loc[i].values):
         ax.plot(stars_df.loc[i].values, label=df.loc[i]['name'])
