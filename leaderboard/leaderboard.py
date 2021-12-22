@@ -24,9 +24,12 @@ for v in members:
 df = pd.DataFrame(members).set_index('id').drop(['global_score', 'completion_day_level'], axis='columns')
 stars_df = pd.DataFrame(stars).set_index('id')
 
-for star in range(42):
+for star in range(50):
     col_name = f'star{star}'
-    foo = stars_df[[col_name]].sort_values(col_name).reset_index()
+    try:
+        foo = stars_df[[col_name]].sort_values(col_name).reset_index()
+    except KeyError:
+        break
     foo['points'] = len(foo) + 1
     foo['points'] -= foo.index
     foo.loc[foo[col_name].isna(),'points'] = 0
