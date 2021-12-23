@@ -17,15 +17,27 @@ def check_hallway(current_x, target_x, creature_positions):
 
 def valid_moves(creature_type, creature_map, creature_count, x0, y0):
     creature_positions = creature_map.keys() # Quicker than converting to a set
+    cx = creature_x(creature_type)
+
+    if x0 == cx: # Don't move out if we're in the right place (and so is everything below us)
+        early_exit = True
+        for y in range(y0+1, creature_count+2):
+            creature = creature_map.get((cx, y))
+            if creature != creature_type:
+                early_exit = False
+                break
+        if early_exit:
+            return
+
     if y0 == 1: # In hallway, must move into correct room
         # First check if we can move to our column
-        if check_hallway(x0, creature_x(creature_type), creature_positions):
+        if check_hallway(x0, cx, creature_positions):
             # Now find if we can move into our column
             for y in range(creature_count+1, 1, -1):
-                creature = creature_map.get((creature_x(creature_type), y))
+                creature = creature_map.get((cx, y))
                 if creature == None:
                     # Space is empty, can move in
-                    yield (creature_x(creature_type), y)
+                    yield (cx, y)
                     break
                 else:
                     if creature == creature_type:
@@ -78,22 +90,20 @@ while todo:
         for new_position in valid_moves(creature_type, creature_map, creature_count, *position):
             new_energy = energy + move_cost(position, new_position, creature_type)
 
-            new_creatures = list(creatures)
-            new_creatures[i] = (creature_type, new_position)
-            new_creatures_t = tuple(sorted(new_creatures))
-
-            if new_creatures_t == final_state:
-                if not best or new_energy < best:
-                    best = new_energy
-                continue
+            new_creatures = tuple(sorted((creatures[:i] + creatures[i+1:] + ((creature_type, new_position),))))
 
             if best and new_energy > best:
                 continue
 
-            if new_creatures_t in seen and seen[new_creatures_t] <= new_energy:
+            if new_creatures in seen and seen[new_creatures] <= new_energy:
                 continue
 
-            heapq.heappush(todo, (new_energy, new_creatures_t))
-            seen[new_creatures_t] = new_energy
+            if new_creatures == final_state:
+                if not best or new_energy < best:
+                    best = new_energy
+                continue
+
+            heapq.heappush(todo, (new_energy, new_creatures))
+            seen[new_creatures] = new_energy
 
 print(best)
