@@ -3,9 +3,12 @@
 import heapq
 import sys
 
+CREATURE_TYPES = 4
+
 VALID_HALLWAY_X = set([1, 2, 4, 6, 8, 10, 11])
-CREATURE_X = {'A': 3, 'B': 5, 'C': 7, 'D': 9}
-MOVE_COSTS = {'A': 1, 'B': 10, 'C': 100, 'D': 1000}
+
+def creature_x(creature_type):
+    return 3 + 2 * creature_type
 
 def check_hallway(current_x, target_x, creature_positions):
     start, end = (current_x+1, target_x+1) if target_x > current_x else (target_x, current_x)
@@ -14,65 +17,49 @@ def check_hallway(current_x, target_x, creature_positions):
             return False
     return True
 
-def valid_moves(creature_type, current_location, creatures):
-    map2 = {v: k for k, v in creatures}
-    if current_location[1] == 1: # In hallway, must move into correct room
-        if check_hallway(current_location[0], CREATURE_X[creature_type], map2.keys()):
-            for y in range(3, 1, -1):
-                creature = map2.get((CREATURE_X[creature_type], y))
-                if creature:
+def valid_moves(creature_type, creature_map, creature_count, x0, y0):
+    creature_positions = creature_map.keys() # Quicker than converting to a set
+    if y0 == 1: # In hallway, must move into correct room
+        # First check if we can move to our column
+        if check_hallway(x0, creature_x(creature_type), creature_positions):
+            # Now find if we can move into our column
+            for y in range(creature_count+1, 1, -1):
+                creature = creature_map.get((creature_x(creature_type), y))
+                if creature == None:
+                    # Space is empty, can move in
+                    yield (creature_x(creature_type), y)
+                    break
+                else:
                     if creature == creature_type:
                         # Side room is being filled with right type, look at next space
                         continue
                     else:
                         # Side room has wrong creature type in, cannot move in
                         break
-                else:
-                    yield (CREATURE_X[creature_type], y)
-                    break
-    else:
-        good = True
-        for y in range(2, current_location[1]):
-            if (current_location[0], y) in map2.keys():
-                good = False
-                break
-        if good:
-            for x in VALID_HALLWAY_X:
-                if check_hallway(current_location[0], x, map2.keys()):
-                    yield (x, 1)
+    else: # In room, try to move into hallway
+        # Can't move if there are any creatures between us and the hallway
+        for y1 in range(2, y0):
+            if (x0, y1) in creature_positions:
+                return
+
+        for x1 in VALID_HALLWAY_X:
+            if check_hallway(x0, x1, creature_positions):
+                yield (x1, 1)
 
 def move_cost(old, new, creature_type):
-    return MOVE_COSTS[creature_type] * (abs(new[0] - old[0]) + abs(new[1] - old[1]))
+    return 10**creature_type * (abs(new[0] - old[0]) + abs(new[1] - old[1]))
 
 with open(sys.argv[1]) as f:
     burrow = [list(l) for l in f.readlines()]
 
-walls = set()
-creatures = []
-for y, row in enumerate(burrow):
-    for x, c in enumerate(row):
-        if c == '#':
-            walls.add((x, y))
-        elif c in ['A', 'B', 'C', 'D']:
-            creatures.append((c, (x, y)))
+creatures = tuple(sorted([(ord(c) - 65, (x, y)) for y, row in enumerate(burrow) for x, c in enumerate(row) if c >= 'A' and c <= 'D']))
+creature_count = max([y for _, (_, y) in creatures]) - 1
 
-creatures = sorted(creatures)
+final_state = tuple([(c, (creature_x(c), y)) for c in range(CREATURE_TYPES) for y in range(2, creature_count+2)])
 
-final_state = (
-    ('A', (3, 2)),
-    ('A', (3, 3)),
-    ('B', (5, 2)),
-    ('B', (5, 3)),
-    ('C', (7, 2)),
-    ('C', (7, 3)),
-    ('D', (9, 2)),
-    ('D', (9, 3))
-)
-
-creatures_t = tuple(sorted(creatures))
-initial_state = (0, creatures_t)
+initial_state = (0, creatures)
 todo = [initial_state]
-seen = {creatures_t: 0}
+seen = {creatures: 0}
 
 best = None
 while todo:
@@ -84,8 +71,9 @@ while todo:
     if seen[creatures] < energy:
         continue
 
+    creature_map = {v: k for k, v in creatures}
     for i, (creature_type, position) in enumerate(creatures):
-        for new_position in valid_moves(creature_type, position, creatures):
+        for new_position in valid_moves(creature_type, creature_map, creature_count, *position):
             new_energy = energy + move_cost(position, new_position, creature_type)
 
             new_creatures = list(creatures)
@@ -94,7 +82,6 @@ while todo:
 
             if new_creatures_t == final_state:
                 if not best or new_energy < best:
-                    print(new_energy)
                     best = new_energy
                 continue
 
@@ -107,8 +94,4 @@ while todo:
             heapq.heappush(todo, (new_energy, new_creatures_t))
             seen[new_creatures_t] = new_energy
 
-if False:
-    while todo:
-        print(heapq.heappop(todo))
-
-print(len(seen))
+print(best)
