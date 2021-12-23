@@ -18,7 +18,7 @@ def valid_moves(creature_type, current_location, creatures):
     map2 = {v: k for k, v in creatures}
     if current_location[1] == 1: # In hallway, must move into correct room
         if check_hallway(current_location[0], CREATURE_X[creature_type], map2.keys()):
-            for y in range(3, 1, -1):
+            for y in range(5, 1, -1):
                 creature = map2.get((CREATURE_X[creature_type], y))
                 if creature:
                     if creature == creature_type:
@@ -61,12 +61,20 @@ creatures = sorted(creatures)
 final_state = (
     ('A', (3, 2)),
     ('A', (3, 3)),
+    ('A', (3, 4)),
+    ('A', (3, 5)),
     ('B', (5, 2)),
     ('B', (5, 3)),
+    ('B', (5, 4)),
+    ('B', (5, 5)),
     ('C', (7, 2)),
     ('C', (7, 3)),
+    ('C', (7, 4)),
+    ('C', (7, 5)),
     ('D', (9, 2)),
-    ('D', (9, 3))
+    ('D', (9, 3)),
+    ('D', (9, 4)),
+    ('D', (9, 5))
 )
 
 creatures_t = tuple(sorted(creatures))
