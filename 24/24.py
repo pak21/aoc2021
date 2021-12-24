@@ -2,12 +2,8 @@
 
 import sys
 
-def parse(l):
-    strings = l.strip().split()
-    return (strings[0], strings[1:])
-
 with open(sys.argv[1]) as f:
-    program = [parse(l) for l in f.readlines()]
+    program = [l.strip().split() for l in f.readlines()]
 
 min_digits = [None] * 14
 max_digits = [None] * 14
@@ -15,14 +11,13 @@ max_digits = [None] * 14
 stack = []
 for digit in range(14):
     div_op = program[digit * 18 + 4]
-    if div_op[1][1] == '1':
+    if div_op[2] == '1':
         add_op = program[digit * 18 + 15]
-        stack.append((digit, int(add_op[1][1])))
-    elif div_op[1][1] == '26':
+        stack.append((digit, int(add_op[2])))
+    else:
+        old_digit, difference = stack.pop()
         add_op = program[digit * 18 + 5]
-        old_digit, x = stack[-1]
-        stack = stack[:-1]
-        difference = x + int(add_op[1][1])
+        difference += int(add_op[2])
 
         if difference > 0:
             max_digits[digit] = 9
@@ -37,9 +32,7 @@ for digit in range(14):
             min_digits[digit] = 1
             min_digits[old_digit] = 1 - difference
 
-        print(f'w{digit} = w{old_digit} + {difference}')
-    else:
-        raise Exception()
+        print(f'model[{digit}] = model[{old_digit}] + {difference}')
 
 print()
 print(''.join([str(x) for x in max_digits]))
