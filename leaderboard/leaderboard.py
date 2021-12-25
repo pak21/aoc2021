@@ -50,8 +50,9 @@ ax.set_prop_cycle(color=colors * 3,
                   linestyle=['solid', 'dashed', 'dotted'] * 10)
 
 for i in stars_df.index:
-    if np.any(stars_df.loc[i].values):
-        ax.plot(stars_df.loc[i].values, label=df.loc[i]['name'])
+    row = stars_df.loc[i]
+    if row.any():
+        ax.plot(row.values, label=df.loc[i]['name'])
 
 box = ax.get_position()
 ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
